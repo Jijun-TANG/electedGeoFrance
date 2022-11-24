@@ -13,7 +13,11 @@ export class CachedDatabaseService {
 
   territoryData_ = new BehaviorSubject<AdminUnit[]>([]);
 
+  //Contains all the informations of the elected
   eluData_ = new BehaviorSubject<EluInfo[]>([]);
+
+  //Contains key-value pair like terr-code: [terr-name, [list of elected]]
+  terrEluData_ = new BehaviorSubject<EluInfo[]>([]);
 
   get territoryData():AdminUnit[] {return this.territoryData_.value;}
 

@@ -1,7 +1,6 @@
 import { Component, OnInit, Optional } from '@angular/core';
 
 import { Observable, BehaviorSubject } from 'rxjs';
-import { LoadDataService } from '../load-data.service';
 
 import { CachedDatabaseService } from '../cached-database.service';
 
@@ -9,6 +8,7 @@ import {SelectionModel} from '@angular/cdk/collections';
 import {FlatTreeControl} from '@angular/cdk/tree';
 import {MatTreeFlatDataSource, MatTreeFlattener} from '@angular/material/tree';
 
+import { HttpClient } from '@angular/common/http';
 
 /* Class definition for Administrative Unit (departement, ecpi, commune, canton, etc.)*/
 export class AdminUnit{
@@ -60,8 +60,11 @@ export class EluInfo{
 export class EluNode{
   fullName: string;
   positionName: string;
+  location: string;
   stillEffective:Boolean;
 }
+
+/* Class definition for terr-elu pair */
 
 
 @Component({
@@ -93,6 +96,7 @@ export class DepartsComponent implements OnInit {
             var k1 = eluInfoNode._source.positions[i].territory_uid;
             temp.fullName = eluInfoNode._source.fullname;
             temp.positionName = eluInfoNode._source.positions[i].role_uid;
+            temp.location = this.terrElu.get(k1)!==undefined ? this.terrElu.get(k1)![0] : "null";
             if(adminUEluMap.has(k1)){
               const arr1 = adminUEluMap.get(k1);
               adminUEluMap.set(k1, [...(arr1 !== undefined ? arr1 : []), temp]);
@@ -137,7 +141,7 @@ export class DepartsComponent implements OnInit {
       }
       ans.push(node);
     }
-    
+
     return ans;
   }
 
@@ -168,8 +172,11 @@ export class DepartsComponent implements OnInit {
   depEluMap = new Map<string,EluNode[]> ();
   adminUEluMap = new Map<string,EluNode[]> ();
 
-  constructor(private cache: CachedDatabaseService) { }
+  constructor(private cache: CachedDatabaseService, private http: HttpClient) { }
   
+  
+  
+  terrElu = new Map<string, [string, [string,boolean][]]>()
   
   ngOnInit(): void {
 
@@ -186,20 +193,29 @@ export class DepartsComponent implements OnInit {
     this.cache.territoryData_.subscribe(
       (data) => {
         this.dataSource.data = data;
-        this.treeControl.expand(this.treeControl.dataNodes[0]);
+        //this.treeControl.expand(this.treeControl.dataNodes[0]); // we want the tree nodes to stay "replié" at the beginning
       }
     );
+
+    this.http.get<Map<string, [string, [string,boolean][]]>>('assets/elu_terr.json').subscribe(
+      (data) => {
+        this.terrElu = data;
+        console.log(this.terrElu);
+      }
+    )
 
     this.cache.eluData_.subscribe(
       (data) => {
         const temp = this.buildTerrEluDataMap(data);
         this.depEluMap = temp[0];
         this.adminUEluMap = temp[1];
-        console.log(data.length)
-        console.log(this.depEluMap)
-        console.log(this.adminUEluMap)
+        //console.log(data.length)
+        //console.log(this.depEluMap)
+        //console.log(this.adminUEluMap)
       }
     );
+
+    
   }
 
   flatNodeMap = new Map<AdminUnitFlatNode, AdminUnit>();
@@ -261,10 +277,12 @@ export class DepartsComponent implements OnInit {
       return false;
     }
 
-    //this.searchString = this.searchString.trim();
+    
     if(!this.searchString || this.searchString.length<=0){
       return true;//display element
     }
+
+    // We can search departement by their code
     const digit_string = Number(this.searchString);
     if(!Number.isNaN(digit_string)){
       return node.code.indexOf(this.searchString) !== -1;
@@ -328,7 +346,7 @@ export class DepartsComponent implements OnInit {
     return result && !this.descendantsAllSelected(node);
   }
 
-  /** Toggle the to-do item selection. Select/deselect all the descendants node */
+  /** Toggle the selected Admintrative unit. Select/deselect all the descendants node */
   todoItemSelectionToggle(node: AdminUnitFlatNode): void {
     this.checklistSelection.toggle(node);
     if(!node || node === undefined){
@@ -349,6 +367,7 @@ export class DepartsComponent implements OnInit {
     this.checklistSelection.toggle(node);
     this.checkAllParentsSelection(node);
   }
+
 
   /* Checks all the parents when a leaf node is selected/unselected */
   checkAllParentsSelection(node: AdminUnitFlatNode): void {
@@ -400,6 +419,12 @@ export class DepartsComponent implements OnInit {
     return null;
   }
 
+  // collapse all tree nodes:
+  collapseAllNodes(){
+    this.treeControl.collapseAll();
+  }
+
+  cacheArray:AdminUnit[] = [];
   /** Select the category so we can insert the new item. */
   addNewItem(node: AdminUnitFlatNode) {
     const parentNode = this.flatNodeMap.get(node);
@@ -407,11 +432,30 @@ export class DepartsComponent implements OnInit {
     this.treeControl.expand(node);
   }
   
-
+  parseInt_(number:string, base: number){
+    return parseInt(number, base)
+  }
   /** Save the node to database */
   saveNode(node: AdminUnitFlatNode, id: number | null | undefined, name: string | null | undefined, kind: string | null | undefined, code: string | null | undefined, children: any) {
     const nestedNode = this.flatNodeMap.get(node);
     this.cache.updateItem(nestedNode!, id, name, kind, code, children);
   }
   
+  /* show list of elected */
+  electedToShow: EluNode[]  = []
+  showElu(node: AdminUnitFlatNode): void{
+    console.log("We are in the function: ", node.name);
+    this.electedToShow = []
+    const key = node.kind+node.code;
+    if(node.kind == "FRDEPA"){
+      if(this.depEluMap.has(key)){
+        this.electedToShow = this.depEluMap.get(key)!;
+      }
+    }
+    if(this.adminUEluMap.has(key)){
+      this.electedToShow = this.adminUEluMap.get(key)!;
+    }
+    console.log(node.name," with key ", key, " 's elected: ", this.electedToShow.length)
+    this.electedToShow.forEach( data => {console.log(data.fullName, data.positionName)})
+  }
 }

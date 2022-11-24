@@ -3,7 +3,6 @@ import {BrowserModule} from '@angular/platform-browser';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 
 import {MaterialExampleModule} from '../material.module';
-import {TreeChecklistExample} from './tree-checklist-example/tree-checklist-example';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {MatNativeDateModule} from '@angular/material/core';
 import {HttpClientModule} from '@angular/common/http';
@@ -12,7 +11,7 @@ import { RouterModule } from '@angular/router';
 import { AppComponent } from './app.component';
 
 @NgModule({
-  declarations: [TreeChecklistExample, DepartsComponent, AppComponent],
+  declarations: [ DepartsComponent, AppComponent],
   imports: [
     BrowserAnimationsModule,
     BrowserModule,
@@ -23,7 +22,6 @@ import { AppComponent } from './app.component';
     ReactiveFormsModule,
     RouterModule.forRoot([
       //{path:'', component: RootComponent},
-        {path: 'trees', component: TreeChecklistExample},
         {path: '', component: DepartsComponent},
     ]),
   ],
