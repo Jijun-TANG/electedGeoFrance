@@ -1,0 +1,82 @@
+<div id="wrap">
+  <div id="body">
+
+    <div id="default-sidebar" class="e-control e-sidebar e-lib e-transition e-touch e-left e-open e-push"
+      style="width: 281px; z-index: 1000;">
+      <div>
+        <div class="center-align">
+          <h2>Périmètre géographique</h2>
+          <div>Modifier le périmètre</div>
+        </div>
+
+        <input [(ngModel)]="searchString" (keyup)="searchString" placeholder="Rechercher une localité" />
+        <mat-tree [dataSource]="dataSource" [treeControl]="treeControl">
+          <mat-tree-node *matTreeNodeDef="let node" [style.display]="filterLeafNode(node) ? 'block':'none' "
+            matTreeNodeToggle matTreeNodePadding matTreeNodePaddingIndent="15">
+            <button mat-icon-button disabled></button>
+            <mat-checkbox class="checklist-leaf-node" [checked]="checklistSelection.isSelected(node)"
+              (change)="todoLeafItemSelectionToggle(node)">{{node.name}}</mat-checkbox>
+          </mat-tree-node>
+
+          <!-- Data modification section:
+      <mat-tree-node *matTreeNodeDef="let node; when: hasNoContent" matTreeNodePadding>
+        <button mat-icon-button disabled></button>
+        <mat-form-field appearance="fill">
+          <mat-label>New item...</mat-label>
+          <input matInput #itemValue placeholder="Ex. Lettuce">
+        </mat-form-field>
+        <button mat-button (click)="saveNode(node, itemValue.value)">Save</button>
+      </mat-tree-node>
+        -->
+
+          <mat-tree-node *matTreeNodeDef="let node; when: hasChild"
+            [style.display]="filterParentNode(node) ? 'block':'none' " matTreeNodePadding matTreeNodePaddingIndent="15">
+            <button class="arrow_button" mat-icon-button matTreeNodeToggle [attr.aria-label]="'Toggle ' + node.name">
+              <mat-icon class="mat-icon-rtl-mirror">
+                {{treeControl.isExpanded(node) ? 'expand_more' : 'chevron_right'}}
+              </mat-icon>
+            </button>
+            <mat-checkbox [checked]="descendantsAllSelected(node)" [indeterminate]="descendantsPartiallySelected(node)"
+              (change)="todoItemSelectionToggle(node)">{{node.name}}</mat-checkbox>
+            <!--<button mat-icon-button (click)="addNewItem(node)"><mat-icon>add</mat-icon></button>-->
+          </mat-tree-node>
+        </mat-tree>
+      </div>
+      <br />
+
+      <a mat-raised-button class="docs-button" routerLink="trees"> Return</a>
+    </div>
+
+    <div class="e-content-animation" style="transform: translateX(0px); margin-left: 281px;">
+      <div class="maincontent" style="border:0.5px solid #80808070">
+        <div id="head">
+          <button id="toggle" class="e-btn e-info e-lib e-control e-icon-btn e-active"><span
+              class="e-btn-icon e-icons burg-icon"></span></button>
+        </div>
+        <div class="content">
+          <div class="title">Expanding Types of Sidebar</div>
+          <div class="sub-title">
+            <div class="radiobutton">
+              <div class="e-radio-wrapper e-wrapper"><input type="radio" id="over" class="e-control e-radio e-lib"
+                  name="state"><label for="over"><span class="e-label">Over</span></label></div>
+            </div>
+            <div class="radiobutton">
+              <div class="e-radio-wrapper e-wrapper"><input type="radio" id="push" class="e-control e-radio e-lib"
+                  name="state"><label for="push"><span class="e-label">Push</span></label></div>
+            </div>
+            <div class="radiobutton">
+              <div class="e-radio-wrapper e-wrapper"><input type="radio" id="slide" class="e-control e-radio e-lib"
+                  name="state"><label for="slide"><span class="e-label">Slide</span></label></div>
+            </div>
+            <div class="radiobutton">
+              <div class="e-radio-wrapper e-wrapper"><input type="radio" id="auto" class="e-control e-radio e-lib"
+                  name="state"><label for="auto"><span class="e-label">Auto</span></label></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+  </div>
+</div>
