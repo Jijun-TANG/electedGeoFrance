@@ -11,13 +11,15 @@ import { HttpClient } from '@angular/common/http';
 })
 export class CachedDatabaseService {
 
+  terrEluData_ = new BehaviorSubject<{ [key: string]: any }>([]);
+  
   territoryData_ = new BehaviorSubject<AdminUnit[]>([]);
 
   //Contains all the informations of the elected
   eluData_ = new BehaviorSubject<EluInfo[]>([]);
 
   //Contains key-value pair like terr-code: [terr-name, [list of elected]]
-  terrEluData_ = new BehaviorSubject<EluInfo[]>([]);
+  
 
   get territoryData():AdminUnit[] {return this.territoryData_.value;}
 
@@ -70,6 +72,13 @@ export class CachedDatabaseService {
   }
 
   initialize(){
+
+    this.httpClient.get<{ [key: string]: any }>('assets/elu_terr.json').subscribe(
+      (data) => {
+        this.terrEluData_.next(data)
+      }
+    )
+    
     this.httpClient.get<{id: number; name: string; kind: string; code: string; children: any}[]>('assets/data.json').subscribe(
       (donnee) => {
         this.territoryData_.next(donnee);
@@ -81,6 +90,7 @@ export class CachedDatabaseService {
         this.eluData_.next(donnee);
       }
     );
+    
     
   }
 

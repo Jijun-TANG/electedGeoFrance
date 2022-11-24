@@ -5,7 +5,7 @@ An angular project shows the elected of different geographical locations in fran
 ### To get the codes:
 
 ```
-git clone <address above>
+git clone https://github.com/Jijun-TANG/electedGeoFrance.git
 ```
 
 ### To start the project, first you need to install the necessary dependencies:
@@ -20,6 +20,6 @@ npm install
 npm start
 ```
 
-### Go to `localhost:4200`
+### Go to `localhost:4200` and test it out!
 
-### You can search the territory wanted by typing zip codes in the search bar:
+### P.S: You can search the territories wanted also by typing zip codes in the search bar

@@ -82,45 +82,9 @@ export class DepartsComponent implements OnInit {
     return this.dataChange.value;
   }
 
+  terrElu = new Map<string, [string, [string,boolean][]]>();
 
-  /* build two map contains key value pairs separately of departement - elus and AdminUnit - elus */ 
-  buildTerrEluDataMap(obj :EluInfo[]): [Map<string, EluNode[]> , Map<string, EluNode[]>]{
-    let depEluMap = new Map<string,EluNode[]> ();
-    let adminUEluMap = new Map<string,EluNode[]> ();
-    obj.forEach(
-      (eluInfoNode:EluInfo) => {
-        if (eluInfoNode._source.positions.length>0){
-          for(var i = 0; i<eluInfoNode._source.positions.length; i++){
-            let temp = new EluNode();
-            temp.stillEffective = eluInfoNode._source.positions[i].end_date !== null && eluInfoNode._source.positions[i].end_date !== undefined;
-            var k1 = eluInfoNode._source.positions[i].territory_uid;
-            temp.fullName = eluInfoNode._source.fullname;
-            temp.positionName = eluInfoNode._source.positions[i].role_uid;
-            temp.location = this.terrElu.get(k1)!==undefined ? this.terrElu.get(k1)![0] : "null";
-            if(adminUEluMap.has(k1)){
-              const arr1 = adminUEluMap.get(k1);
-              adminUEluMap.set(k1, [...(arr1 !== undefined ? arr1 : []), temp]);
-            }
-            else{
-              adminUEluMap.set(k1, [temp]);
-            }
-            eluInfoNode._source.departments_uids.forEach(
-              (dUid:string) => {
-                if(depEluMap.has(dUid)){
-                  const arr1 = depEluMap.get(k1);
-                  depEluMap.set(dUid, [...(arr1 !== undefined ? arr1 : []), temp]);
-                }
-                else{
-                  depEluMap.set(dUid, [temp]);
-                }
-              }
-            )
-          }
-        }
-      }
-    )
-    return [depEluMap, adminUEluMap];
-  }
+  
   /**
    * Build the file structure tree. The `value` is the Json object, or a sub-tree of a Json object.
    * The return value is a list of `AdminUnit`.*/
@@ -172,11 +136,52 @@ export class DepartsComponent implements OnInit {
   depEluMap = new Map<string,EluNode[]> ();
   adminUEluMap = new Map<string,EluNode[]> ();
 
-  constructor(private cache: CachedDatabaseService, private http: HttpClient) { }
+  /* build two map contains key value pairs separately of departement - elus and AdminUnit - elus */ 
+  buildTerrEluDataMap(obj :EluInfo[]): [Map<string, EluNode[]> , Map<string, EluNode[]>]{
+    let depEluMap = new Map<string,EluNode[]> ();
+    let adminUEluMap = new Map<string,EluNode[]> ();
+    obj.forEach(
+      (eluInfoNode:EluInfo) => {
+        if (eluInfoNode._source.positions.length>0){
+          for(var i = 0; i<eluInfoNode._source.positions.length; i++){
+            let temp = new EluNode();
+            temp.stillEffective = eluInfoNode._source.positions[i].end_date !== null && eluInfoNode._source.positions[i].end_date !== undefined;
+            var k1 = eluInfoNode._source.positions[i].territory_uid;
+            temp.fullName = eluInfoNode._source.fullname;
+            temp.positionName = eluInfoNode._source.positions[i].role_uid;
+            temp.location = this.terrElu.get(k1)!==undefined ? this.terrElu.get(k1)![0] : "null";
+            if(adminUEluMap.has(k1)){
+              const arr1 = adminUEluMap.get(k1);
+              adminUEluMap.set(k1, [...(arr1 !== undefined ? arr1 : []), temp]);
+            }
+            else{
+              adminUEluMap.set(k1, [temp]);
+            }
+            eluInfoNode._source.departments_uids.forEach(
+              (dUid:string) => {
+                if(depEluMap.has(dUid)){
+                  const arr1 = depEluMap.get(k1);
+                  depEluMap.set(dUid, [...(arr1 !== undefined ? arr1 : []), temp]);
+                }
+                else{
+                  depEluMap.set(dUid, [temp]);
+                }
+              }
+            )
+          }
+        }
+      }
+    )
+    return [depEluMap, adminUEluMap];
+  }
+
+  constructor(private cache: CachedDatabaseService, private http: HttpClient) {
+    
+   }
   
   
-  
-  terrElu = new Map<string, [string, [string,boolean][]]>()
+
+  selectedNodes = new Set<AdminUnitFlatNode>();
   
   ngOnInit(): void {
 
@@ -197,10 +202,11 @@ export class DepartsComponent implements OnInit {
       }
     );
 
-    this.http.get<Map<string, [string, [string,boolean][]]>>('assets/elu_terr.json').subscribe(
+    this.cache.terrEluData_.subscribe(
       (data) => {
-        this.terrElu = data;
-        console.log(this.terrElu);
+        Object.keys(data).forEach(
+          (key) => {this.terrElu.set(key, data[key]);}
+        )
       }
     )
 
@@ -209,13 +215,10 @@ export class DepartsComponent implements OnInit {
         const temp = this.buildTerrEluDataMap(data);
         this.depEluMap = temp[0];
         this.adminUEluMap = temp[1];
-        //console.log(data.length)
-        //console.log(this.depEluMap)
-        //console.log(this.adminUEluMap)
       }
     );
 
-    
+    this.selectedNodes.add(new AdminUnitFlatNode());
   }
 
   flatNodeMap = new Map<AdminUnitFlatNode, AdminUnit>();
@@ -348,23 +351,31 @@ export class DepartsComponent implements OnInit {
 
   /** Toggle the selected Admintrative unit. Select/deselect all the descendants node */
   todoItemSelectionToggle(node: AdminUnitFlatNode): void {
-    this.checklistSelection.toggle(node);
     if(!node || node === undefined){
       return;
     }
+    this.checklistSelection.toggle(node);
     const descendants = this.treeControl.getDescendants(node);
-    this.checklistSelection.isSelected(node)
-      ? this.checklistSelection.select(...descendants)
-      : this.checklistSelection.deselect(...descendants);
-
+    
+    if(this.checklistSelection.isSelected(node)){
+      this.checklistSelection.select(...descendants);
+      this.selectedNodes.add(node);
+      descendants.forEach( dataNode => {this.selectedNodes.add(dataNode);})
+    }
+    else{
+      this.checklistSelection.deselect(...descendants);
+      this.selectedNodes.delete(node);
+      descendants.forEach( dataNode => {this.selectedNodes.delete(dataNode);})
+    }
     // Force update for the parent
-    descendants.forEach(child => this.checklistSelection.isSelected(child));
+    // descendants.forEach(child => this.checklistSelection.isSelected(child));
     this.checkAllParentsSelection(node);
   }
 
   /** Toggle a leaf to-do item selection. Check all the parents to see if they changed */
   todoLeafItemSelectionToggle(node: AdminUnitFlatNode): void {
     this.checklistSelection.toggle(node);
+    this.checklistSelection.isSelected(node) ? this.selectedNodes.add(node) : this.selectedNodes.delete(node)
     this.checkAllParentsSelection(node);
   }
 
@@ -380,10 +391,10 @@ export class DepartsComponent implements OnInit {
 
   /** Check root node checked state and change it accordingly */
   checkRootNodeSelection(node: AdminUnitFlatNode): void {
-    const nodeSelected = this.checklistSelection.isSelected(node);
     if(!node || node === undefined){
       return;
     }
+    const nodeSelected = this.checklistSelection.isSelected(node);
     const descendants = this.treeControl.getDescendants(node);
     const descAllSelected =
       descendants.length > 0 &&
@@ -442,20 +453,35 @@ export class DepartsComponent implements OnInit {
   }
   
   /* show list of elected */
+  showElected = false;
+
   electedToShow: EluNode[]  = []
-  showElu(node: AdminUnitFlatNode): void{
-    console.log("We are in the function: ", node.name);
-    this.electedToShow = []
-    const key = node.kind+node.code;
-    if(node.kind == "FRDEPA"){
-      if(this.depEluMap.has(key)){
-        this.electedToShow = this.depEluMap.get(key)!;
-      }
+
+
+
+  showElu(): void{
+
+    if(this.showElected){
+      this.showElected = false;
     }
-    if(this.adminUEluMap.has(key)){
-      this.electedToShow = this.adminUEluMap.get(key)!;
+    else{
+      this.showElected = true;
     }
-    console.log(node.name," with key ", key, " 's elected: ", this.electedToShow.length)
-    this.electedToShow.forEach( data => {console.log(data.fullName, data.positionName)})
+    if(this.showElected){
+      this.electedToShow = [];
+      this.selectedNodes.forEach(
+        (node) => {
+          const key = node.kind+node.code;
+          if(node.kind == "FRDEPA"){
+            if(this.depEluMap.has(key)){
+              this.electedToShow = this.electedToShow.concat(this.depEluMap.get(key)!);
+            }
+          }
+          else if(this.adminUEluMap.has(key)){
+            this.electedToShow = this.electedToShow.concat(this.adminUEluMap.get(key)!);
+          }
+        }
+      )
+    }
   }
 }

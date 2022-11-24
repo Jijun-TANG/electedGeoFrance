@@ -127,6 +127,15 @@ mat-tree-node {
   min-height: 400px;
 }
 
+.InlineDisplay {
+  display: flex;
+  list-style: none;
+  .li {
+    margin-left: 100px;
+    padding: 100px;
+  }
+}
+
 .close-btn:hover {
   color: #fafafa;
 }
@@ -146,6 +155,19 @@ aside#default-sidebar {
   float: left;
   width: 150px;
   min-height: 400px;
+}
+
+.c-header__nav {
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+.c-nav li {
+  /* This will remove display dot
+  display: inline-block;
+   */
+
+  list-style: none;
 }
 
 @font-face {
