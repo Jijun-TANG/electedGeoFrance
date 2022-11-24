@@ -252,7 +252,7 @@ export class DepartsComponent implements OnInit {
 
   hasChild = (_: number, _nodeData: AdminUnitFlatNode) => _nodeData.expandable;
 
-  hasNoContent = (_: number, _nodeData: AdminUnitFlatNode) => _nodeData.name === '' && typeof _nodeData.id === "undefined";
+  hasNoContent = (_: number, _nodeData: AdminUnitFlatNode) => (_nodeData.id<0) ;
 
   /**
    * Transformer to convert nested node to flat node. Record the nodes in maps for later use.
@@ -435,23 +435,45 @@ export class DepartsComponent implements OnInit {
     this.treeControl.collapseAll();
   }
 
-  cacheArray:AdminUnit[] = [];
+  /* helper container to realize the functionalities below*/
+  cacheInput = new Map<number, AdminUnitFlatNode> ();
+  cacheQueue = 0;
   /** Select the category so we can insert the new item. */
   addNewItem(node: AdminUnitFlatNode) {
     const parentNode = this.flatNodeMap.get(node);
-    this.cache.insertItem(parentNode!, {id: 0, name: '', kind: '', code: '', children: []});
+    const temp_id = -this.cacheQueue-1;
+    this.cache.insertItem(parentNode!, {id: temp_id, name: '', kind: '', code: '', children: undefined});
     this.treeControl.expand(node);
+    this.cacheQueue += 1;
+    this.cacheInput.set(temp_id, node);
   }
   
-  parseInt_(number:string, base: number){
-    return parseInt(number, base)
+
+  /**Existing AdminUnit Length will be the id of the next newly added Node */
+  getUnitsLength():number{
+    return this.cache.territoryData.length;
   }
+
   /** Save the node to database */
   saveNode(node: AdminUnitFlatNode, id: number | null | undefined, name: string | null | undefined, kind: string | null | undefined, code: string | null | undefined, children: any) {
     const nestedNode = this.flatNodeMap.get(node);
+    if(name && name.length>=4){
+      if(name.slice(0,2)!="FR"){
+        name = "FR"+name;
+      }
+    }
+    this.cacheInput.delete(node.id);
     this.cache.updateItem(nestedNode!, id, name, kind, code, children);
   }
   
+
+  /**Cancel the input */
+  cancelInput(node:AdminUnitFlatNode){
+    const parentNode = this.flatNodeMap.get(this.cacheInput.get(node.id)!);
+    this.cache.removeItem(parentNode!, node.id);
+    this.cacheInput.delete(node.id);
+  }
+
   /* show list of elected */
   showElected = false;
 

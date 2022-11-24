@@ -71,6 +71,16 @@ export class CachedDatabaseService {
     this.territoryData_.next(this.territoryData);
   }
 
+
+  removeItem(parent:AdminUnit|undefined, id:number){
+    if(parent && parent.children && parent.children.length>0){
+      parent.children.forEach((element,index)=>{
+        if(element.id==id) parent.children.splice(index,1);
+     });
+    }
+    this.territoryData_.next(this.territoryData);
+  }
+
   initialize(){
 
     this.httpClient.get<{ [key: string]: any }>('assets/elu_terr.json').subscribe(
