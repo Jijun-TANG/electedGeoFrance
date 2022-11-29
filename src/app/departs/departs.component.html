@@ -17,7 +17,14 @@
               <mat-checkbox class="example-margin" [checked]="false" (click)="collapseAllNodes()">Plier</mat-checkbox>
             </li>
             <li>
-              <mat-checkbox class="example-margin" (click)="showElu()"> Montrer les élus</mat-checkbox>
+              <mat-checkbox class="example-margin" [checked]="false" (click)="expandAllNodes()">Tout Développer
+              </mat-checkbox>
+            </li>
+
+          </ul>
+          <ul class="InlineDisplay">
+            <li>
+              <button (click)="showElu2()"> Montrer les élus</button>
             </li>
           </ul>
         </nav>
@@ -72,7 +79,7 @@
     </div>
 
     <div class="e-content-animation">
-      <div class="maincontent" style="border:0.5px solid #80808070">
+      <div class="maincontent">
         <div id="head">
           <button id="toggle" class="e-btn e-info e-lib e-control e-icon-btn e-active"><span
               class="e-btn-icon e-icons burg-icon"></span></button>
@@ -83,7 +90,20 @@
               <ul>
                 <li>{{elu.fullName}}</li>
                 <li>{{elu.positionName}}</li>
-                <li *ngIf="elu.stillEffective">{{elu.location}}</li>
+                <li>{{elu.location}}</li>
+                <li>
+                  <ng-template [ngIf]="elu.stillEffective" [ngIfElse]="noMore">
+                    <div>
+                      En fonction
+                    </div>
+                  </ng-template>
+
+                  <ng-template #noMore>
+                    <div>
+                      Pas en fonction
+                    </div>
+                  </ng-template>
+                </li>
               </ul>
             </nav>
           </div>

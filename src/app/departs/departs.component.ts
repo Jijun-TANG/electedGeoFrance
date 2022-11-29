@@ -9,6 +9,7 @@ import {FlatTreeControl} from '@angular/cdk/tree';
 import {MatTreeFlatDataSource, MatTreeFlattener} from '@angular/material/tree';
 
 import { HttpClient } from '@angular/common/http';
+import { API_URL } from '../env';
 
 /* Class definition for Administrative Unit (departement, ecpi, commune, canton, etc.)*/
 export class AdminUnit{
@@ -279,16 +280,18 @@ export class DepartsComponent implements OnInit {
     if(!node || node === undefined){
       return false;
     }
-
     
     if(!this.searchString || this.searchString.length<=0){
       return true;//display element
     }
 
     // We can search departement by their code
-    const digit_string = Number(this.searchString);
-    if(!Number.isNaN(digit_string)){
-      return node.code.indexOf(this.searchString) !== -1;
+    if(node.code === this.searchString.trim()){
+      return true;
+    }
+    const temp = node.kind + node.code;
+    if(temp.indexOf(this.searchString) === 0){
+      return true;
     }
     return node.name.toLowerCase().indexOf(this.searchString.toLowerCase()) !== -1;
   }
@@ -302,13 +305,20 @@ export class DepartsComponent implements OnInit {
     if(!this.searchString || this.searchString.length<=0){
       return true;//display element
     }
-    const digit_string = Number(this.searchString);
-    if(!Number.isNaN(digit_string)){
-      return node.code.indexOf(this.searchString) !== -1;
+
+    if(node.code.indexOf(this.searchString.trim())!== -1){
+      return true;
     }
+
+    const temp = node.kind + node.code;
+    if(temp.indexOf(this.searchString) === 0){
+      return true;
+    }
+
     if (node.name.toLowerCase().indexOf(this.searchString.toLowerCase()) !== -1) {
       return true;
     }
+
     const descendants = this.treeControl.getDescendants(node)
 
     if (
@@ -316,7 +326,7 @@ export class DepartsComponent implements OnInit {
         (descendantNode) =>
           descendantNode.name
             .toLowerCase()
-            .indexOf(this.searchString?.toLowerCase()) !== -1 || descendantNode.code.indexOf(this.searchString) !== -1
+            .indexOf(this.searchString?.toLowerCase()) !== -1 || descendantNode.code === this.searchString.trim()
       )
     ) {
       return true;
@@ -435,6 +445,10 @@ export class DepartsComponent implements OnInit {
     this.treeControl.collapseAll();
   }
 
+  expandAllNodes(){
+    this.treeControl.expandAll();
+  }
+
   /* helper container to realize the functionalities below*/
   cacheInput = new Map<number, AdminUnitFlatNode> ();
   cacheQueue = 0;
@@ -479,8 +493,33 @@ export class DepartsComponent implements OnInit {
 
   electedToShow: EluNode[]  = []
 
+  getElected(code: string): EluNode[]{
+    const endPoint = API_URL + '/elected/' + code
+    var EluNodes: EluNode[] = []
+    this.http.get<any>(endPoint).subscribe({
+        next: data => {EluNodes.concat(data); console.log("what's the data? data")},
+        error: console.error
+      })
+    return EluNodes;
+  }
 
-
+  showElu2():void {
+    if(this.showElected){
+      this.showElected = false;
+    }
+    else{
+      this.showElected = true;
+    }
+    if(this.showElected){
+      this.electedToShow = [];
+      this.selectedNodes.forEach(
+        (node) => {
+          const key = node.kind+node.code;
+          this.electedToShow.concat(this.getElected(key));
+        }
+      )
+    }
+  }
   showElu(): void{
 
     if(this.showElected){
