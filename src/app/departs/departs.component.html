@@ -9,15 +9,25 @@
           <div>Modifier le périmètre</div>
         </div>
         <nav>
-          <ul class="InlineDisplay">
-            <!-- [(ngModel)]="searchString" -->
+          <!--<ul class="InlineDisplay">
             <li><input #searchBox id="search-box" type="search" name="searchVal" (input)="search(searchBox.value)"
                 [(ngModel)]="searchString" placeholder="Rechercher une localité..." />
               <button>Search</button>
             </li>
-          </ul>
-          <ul class="search-result">
-            <app-search-region></app-search-region>
+          </ul>-->
+          <ul class="InlineDisplay">
+            <div id="search-component">
+              <input #searchBox id="search-box" (input)="search(searchBox.value)" [(ngModel)]="searchString"
+                placeholder="Rechercher un territoire..." name="searchVal" /><button>Search</button>
+
+              <ul class="search-result">
+                <li *ngFor="let hero of heroes$ | async">
+                  <a routerLink="/adminCode/{{hero.kind + hero.code}}">
+                    {{hero.name}}
+                  </a>
+                </li>
+              </ul>
+            </div>
           </ul>
           <ul class="InlineDisplay">
             <li>

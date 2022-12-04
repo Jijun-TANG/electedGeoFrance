@@ -29,6 +29,13 @@ export class AdminUnitFlatNode {
   expandable: boolean;
 }
 
+export class AdminBasic{ 
+  id:number = -1;
+  name:string = "";
+  kind:string = "";
+  code:string = "";
+}
+
 /* Class definition for list of elected */
 export interface positions_of_source{
   "end_date" : any;
@@ -185,10 +192,6 @@ export class DepartsComponent implements OnInit {
 
   selectedNodes = new Set<AdminUnitFlatNode>();
   elected$!: Observable<EluNode[]>;
-  private searchTerms = new Subject<string>();
-  search(term:string):void{
-    this.searchTerms.next(term);
-  }
   ngOnInit(): void {
 
     this.elected$ = this.searchTerms.pipe(
@@ -234,6 +237,17 @@ export class DepartsComponent implements OnInit {
     );
 
     this.selectedNodes.add(new AdminUnitFlatNode());
+
+    this.heroes$ = this.searchTerms.pipe(
+      debounceTime(350),
+
+      // ignore new term if same as previous term
+      distinctUntilChanged(),
+
+      // switch to new search observable each time the term changes
+      switchMap((term: string) => this.cache.getAdminUnitByName(term)),
+    );
+    this.heroes$.subscribe(data => console.log(data));
   }
 
   flatNodeMap = new Map<AdminUnitFlatNode, AdminUnit>();
@@ -559,5 +573,12 @@ export class DepartsComponent implements OnInit {
         }
       )
     }
+  }
+  heroes$!: Observable<AdminBasic[]>;
+  private searchTerms = new Subject<string>();
+
+
+  search(term: string): void {
+    this.searchTerms.next(term);
   }
 }
