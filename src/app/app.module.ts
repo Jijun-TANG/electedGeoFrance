@@ -9,9 +9,12 @@ import {HttpClientModule} from '@angular/common/http';
 import { DepartsComponent } from './departs/departs.component';
 import { RouterModule } from '@angular/router';
 import { AppComponent } from './app.component';
+import { AppRoutingModule } from './app-routing.module';
+import { ElectedComponent } from './elected/elected.component';
+import { SearchRegionComponent } from './search-region/search-region.component';
 
 @NgModule({
-  declarations: [ DepartsComponent, AppComponent],
+  declarations: [ DepartsComponent, AppComponent, ElectedComponent, SearchRegionComponent],
   imports: [
     BrowserAnimationsModule,
     BrowserModule,
@@ -20,12 +23,16 @@ import { AppComponent } from './app.component';
     MatNativeDateModule,
     MaterialExampleModule,
     ReactiveFormsModule,
-    RouterModule.forRoot([
-      //{path:'', component: RootComponent},
-        {path: '', component: DepartsComponent},
-    ]),
+    AppRoutingModule,
   ],
   providers: [],
   bootstrap: [AppComponent],
 })
 export class AppModule {}
+
+/*
+RouterModule.forRoot([
+      //{path:'', component: RootComponent},
+        {path: '', component: DepartsComponent},
+    ]),
+*/

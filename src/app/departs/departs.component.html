@@ -10,7 +10,14 @@
         </div>
         <nav>
           <ul class="InlineDisplay">
-            <li><input [(ngModel)]="searchString" placeholder="Rechercher une localité" /></li>
+            <!-- [(ngModel)]="searchString" -->
+            <li><input #searchBox id="search-box" type="search" name="searchVal" (input)="search(searchBox.value)"
+                [(ngModel)]="searchString" placeholder="Rechercher une localité..." />
+              <button>Search</button>
+            </li>
+          </ul>
+          <ul class="search-result">
+            <app-search-region></app-search-region>
           </ul>
           <ul class="InlineDisplay">
             <li>
@@ -24,7 +31,7 @@
           </ul>
           <ul class="InlineDisplay">
             <li>
-              <button (click)="showElu2()"> Montrer les élus</button>
+              <button (click)="showElu()"> Montrer les élus</button>
             </li>
           </ul>
         </nav>

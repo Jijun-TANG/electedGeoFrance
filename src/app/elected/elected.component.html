@@ -1,0 +1,23 @@
+<div *ngIf="electedInfo">
+    <nav class="c-nav" *ngFor="let elu of electedInfo">
+        <ul>
+            <li>{{elu.fullName}}</li>
+            <li>{{elu.positionName}}</li>
+            <li>{{elu.location}}</li>
+            <li>
+                <ng-template [ngIf]="elu.stillEffective" [ngIfElse]="noMore">
+                    <div>
+                        En fonction
+                    </div>
+                </ng-template>
+
+                <ng-template #noMore>
+                    <div>
+                        Pas en fonction
+                    </div>
+                </ng-template>
+            </li>
+        </ul>
+    </nav>
+    <button type="button" (click)="goBack()">go back</button>
+</div>

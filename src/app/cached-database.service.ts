@@ -1,10 +1,14 @@
 import { Injectable } from '@angular/core';
 
-import {BehaviorSubject, Observable} from 'rxjs';
+import {BehaviorSubject, catchError, Observable} from 'rxjs';
 
 import { AdminUnit, AdminUnitFlatNode, positions_of_source, source_of_elu, EluInfo, EluNode } from './departs/departs.component';
 
 import { HttpClient } from '@angular/common/http';
+
+import { API_URL } from './env';
+
+import { AdminBasic } from './search-region/search-region.component';
 
 @Injectable({
   providedIn: 'root'
@@ -104,5 +108,25 @@ export class CachedDatabaseService {
 
   constructor(private httpClient: HttpClient) {
     this.initialize();
+  }
+
+  getElectedByCode(code: string): Observable<EluNode[]>{
+    const target_url = `${API_URL}`+'/elected/'+`${code}`;
+    return this.httpClient.get<EluNode[]>(target_url);
+  }
+
+  getElected(code: string): EluNode[]{
+    const endPoint = API_URL + '/elected/' + code
+    var EluNodes: EluNode[] = []
+    this.httpClient.get<EluNode[]>(endPoint).subscribe({
+        next: data => {EluNodes.concat(data); console.log("what's the data?" ,data)},
+        error: console.error
+      })
+    return EluNodes;
+  }
+
+  getAdminUnitByName(name: string): Observable<AdminBasic[]>{
+    const endPoint = API_URL + '/territoires/' + name
+    return this.httpClient.get<AdminBasic[]>(endPoint);
   }
 }

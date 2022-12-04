@@ -1,6 +1,6 @@
 import { Component, OnInit, Optional } from '@angular/core';
 
-import { Observable, BehaviorSubject } from 'rxjs';
+import { Observable, BehaviorSubject, Subject, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
 
 import { CachedDatabaseService } from '../cached-database.service';
 
@@ -62,6 +62,7 @@ export class EluNode{
   fullName: string;
   positionName: string;
   location: string;
+  terrUid: string;
   stillEffective:Boolean;
 }
 
@@ -183,8 +184,21 @@ export class DepartsComponent implements OnInit {
   
 
   selectedNodes = new Set<AdminUnitFlatNode>();
-  
+  elected$!: Observable<EluNode[]>;
+  private searchTerms = new Subject<string>();
+  search(term:string):void{
+    this.searchTerms.next(term);
+  }
   ngOnInit(): void {
+
+    this.elected$ = this.searchTerms.pipe(
+      debounceTime(50),
+
+      distinctUntilChanged(),
+
+      switchMap((code:string) => this.cache.getElectedByCode(code)),
+
+    );
 
     this.treeFlattener = new MatTreeFlattener(
       this.transformer,
@@ -497,7 +511,7 @@ export class DepartsComponent implements OnInit {
     const endPoint = API_URL + '/elected/' + code
     var EluNodes: EluNode[] = []
     this.http.get<any>(endPoint).subscribe({
-        next: data => {EluNodes.concat(data); console.log("what's the data? data")},
+        next: data => {EluNodes.concat(data); console.log("what's the data of get Elected by code?" ,data)},
         error: console.error
       })
     return EluNodes;
@@ -515,7 +529,8 @@ export class DepartsComponent implements OnInit {
       this.selectedNodes.forEach(
         (node) => {
           const key = node.kind+node.code;
-          this.electedToShow.concat(this.getElected(key));
+          this.electedToShow.concat(this.cache.getElected(key));
+          //console.log("after the node's pursuit of getElected ", this.electedToShow);
         }
       )
     }
