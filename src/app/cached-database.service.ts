@@ -1,14 +1,19 @@
 import { Injectable } from '@angular/core';
 
-import {BehaviorSubject, catchError, Observable} from 'rxjs';
+import {BehaviorSubject, catchError, Observable, of} from 'rxjs';
 
-import { AdminUnit, AdminUnitFlatNode, positions_of_source, source_of_elu, EluInfo, EluNode } from './departs/departs.component';
+import { AdminUnit, EluInfo, EluNode } from './departs/departs.component';
 
 import { HttpClient } from '@angular/common/http';
 
 import { API_URL } from './env';
 
 import { AdminBasic } from './search-region/search-region.component';
+
+/*
+An injectable service in charge of loading data from http side
+ */
+
 
 @Injectable({
   providedIn: 'root'
@@ -27,6 +32,7 @@ export class CachedDatabaseService {
 
   get eluData():EluInfo[] {return this.eluData_.value;}
 
+  //function to load Tree Data from json file to save an array of object locally
   buildTerrDataFileTree(obj :{id: number; name: string; kind: string; code: string; children: any}[], level: number): AdminUnit[] {
     let ans:AdminUnit[] = [];
     for(let i = 0; i<obj.length; ++i){
@@ -47,6 +53,7 @@ export class CachedDatabaseService {
     return ans;
   }
 
+  //function to add AdminUnit in TreeView
   insertItem(parent: AdminUnit, obj :{id: number; name: string; kind: string; code: string; children: any}) {
     if (parent.children) {
       parent.children.push(obj as AdminUnit);
@@ -54,6 +61,7 @@ export class CachedDatabaseService {
     }
   }
 
+  //function to modify tree unit
   updateItem(node: AdminUnit, id: number | null | undefined, name: string | null | undefined, kind: string | null | undefined, code: string | null | undefined, children: any) {
     if(id!==null && id!==undefined){
       node.id = id
@@ -73,7 +81,7 @@ export class CachedDatabaseService {
     this.territoryData_.next(this.territoryData);
   }
 
-
+  //function to remove AdminUnit in tree view
   removeItem(parent:AdminUnit|undefined, id:number){
     if(parent && parent.children && parent.children.length>0){
       parent.children.forEach((element,index)=>{
@@ -110,6 +118,7 @@ export class CachedDatabaseService {
     this.initialize();
   }
 
+  
   getElectedByCode(code: string): Observable<EluNode[]>{
     const target_url = `${API_URL}`+'/elected/'+`${code}`;
     return this.httpClient.get<EluNode[]>(target_url);
@@ -126,7 +135,14 @@ export class CachedDatabaseService {
   }
 
   getAdminUnitByName(name: string): Observable<AdminBasic[]>{
-    const endPoint = API_URL + '/territoires/' + name
+    if(name === undefined || name === null || name.length<1){
+      return of([]);
+    }
+    var endPoint = API_URL + '/territoires/' + name
+    if(Number.isNaN(Number(name))===false){
+      //console.log("we get number! ", Number(name));
+      endPoint = API_URL + '/territoires_codes/' + name
+    }
     return this.httpClient.get<AdminBasic[]>(endPoint);
   }
 }

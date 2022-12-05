@@ -247,12 +247,13 @@ export class DepartsComponent implements OnInit {
       // switch to new search observable each time the term changes
       switchMap((term: string) => this.cache.getAdminUnitByName(term)),
     );
-    this.heroes$.subscribe(data => console.log(data));
   }
 
   flatNodeMap = new Map<AdminUnitFlatNode, AdminUnit>();
 
+  //Main search string to show relevant tree nodes
   searchString:string = '';
+
   /** Map from nested node to flattened node. This helps us to keep the same object for selection */
   nestedNodeMap = new Map<AdminUnit, AdminUnitFlatNode>();
 

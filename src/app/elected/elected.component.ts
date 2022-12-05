@@ -24,7 +24,7 @@ export class ElectedComponent implements OnInit {
 
   getHero(): void {
     const id = this.route.snapshot.paramMap.get('code')!;
-    console.log("params dict ", this.route.snapshot.paramMap);
+    //console.log("params dict ", this.route.snapshot.paramMap);
     this.dataService.getElectedByCode(id).subscribe(elects => this.electedInfo = elects);
   }
 
